@@ -4,20 +4,22 @@ using UnityEngine;
 
 public class ProjectileMove : MonoBehaviour
 {
-    [SerializeField] 
-    private float speed;
+    [SerializeField] private float speed;
+	[SerializeField] private List<GameObject> trails;
 
     // Start is called before the first frame update
     void Start()
     {
         isCollided = false;
-		rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
         if(rb == null) { Debug.LogError("RigidBody is nullptr"); }
     }
 
     private void FixedUpdate()
     {
         rb.position += (transform.forward) * (speed * Time.deltaTime);
+        //transform.position += transform.forward * speed * Time.deltaTime;
+
     }
     // Update is called once per frame
     void Update()
@@ -32,14 +34,27 @@ public class ProjectileMove : MonoBehaviour
             isCollided = true;
             rb.isKinematic = true;
             StartCoroutine(DestroyParticle(0f));
+
+			if (trails.Count > 0) 
+            {
+				for (int i = 0; i < trails.Count; i++) 
+                {
+					trails[i].transform.parent = null;
+					ParticleSystem ps = trails[i].GetComponent<ParticleSystem>();
+					if (ps != null) {
+						ps.Stop();
+						Destroy(ps.gameObject, ps.main.duration + ps.main.startLifetime.constantMax);
+					}
+				}
+			}
         }
     }
 
     private IEnumerator DestroyParticle (float waitTime) 
     {
-		yield return new WaitForSeconds (waitTime);
-		Destroy (gameObject);
-	}
+        yield return new WaitForSeconds (waitTime);
+        Destroy (gameObject);
+    }
 
     private Rigidbody rb;
     private bool      isCollided;
