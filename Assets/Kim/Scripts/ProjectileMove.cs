@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class ProjectileMove : MonoBehaviour
 {
     [SerializeField] private float speed;
 	[SerializeField] private List<GameObject> trails;
-
+	[SerializeField] private GameObject hitPrefab;
     // Start is called before the first frame update
     void Start()
     {
@@ -47,6 +49,23 @@ public class ProjectileMove : MonoBehaviour
 					}
 				}
 			}
+
+            ContactPoint contact = collision.GetContact(0);
+			Quaternion rot = Quaternion.FromToRotation (Vector3.up, contact.normal);
+			Vector3 pos = contact.point;
+
+
+            if (hitPrefab != null)
+            {
+                var hitVFX = Instantiate(hitPrefab, pos, rot);
+
+				var ps = hitVFX.GetComponent<ParticleSystem> ();
+				if (ps == null) {
+					var psChild = hitVFX.transform.GetChild (0).GetComponent<ParticleSystem> ();
+					Destroy (hitVFX, psChild.main.duration);
+				} else
+					Destroy (hitVFX, ps.main.duration);
+            }
         }
     }
 
